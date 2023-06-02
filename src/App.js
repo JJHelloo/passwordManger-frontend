@@ -1,86 +1,64 @@
-import "./App.css";
-import React from "react";
-import { useState, useEffect } from "react";
-import Axios from "axios";
+import './App.css';
+import React, { useState } from "react";
+import { BrowserRouter, Link, Route, Switch } from "react-router-dom";
+import PasswordManager from "./components/passwordManager";
+
 function App() {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [title, setTitle] = useState("");
-  const [passwordList, setPasswordList] = useState([]);
+  const [isLogin, setIsLogin] = useState(true);
 
-  useEffect(() => {
-    Axios.get("http://localhost:3001/showPasswords").then((response) => {
-      setPasswordList(response.data);
-    });
-  }, []);
-
-  const addPassword = () => {
-    Axios.post("http://localhost:3001/addPassword", {
-      password: password,
-      title: title,
-    });
+  const handleLogin = () => {
+    // Handle login logic
+    console.log("Login", username, password);
   };
 
-  const decryptPassword = (encryption) => {
-    Axios.post("http://localhost:3001/decryptPassword", {
-      password: encryption.password,
-      iv: encryption.iv,
-    }).then((response) => {
-      setPasswordList(
-        passwordList.map((val) => {
-          return val.id == encryption.id
-            ? {
-                id: val.id,
-                password: val.password,
-                title: response.data,
-                iv: val.iv,
-              }
-            : val;
-        })
-      );
-    });
+  const handleSignup = () => {
+    // Handle signup logic
+    console.log("Signup", username, password);
   };
 
   return (
     <div className="App">
-      <div className="addPassword">
-      <input
-          type="text"
-          placeholder="Ex. Facebook"
-          onChange={(event) => {
-            setTitle(event.target.value);
-          }}
-        />
+      <div className="card">
+      <h2 className={isLogin ? "" : "red-heading"}>{isLogin ? "Login" : "Signup"}</h2>
         <input
           type="text"
-          placeholder="Ex. password123"
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
-        <button onClick={addPassword}> Add Password</button>
-      </div>
-
-      <div className="passwords">
-        {passwordList.map((val, key) => {
-          return (
-            <div
-              className="password"
-              onClick={() => {
-                decryptPassword({
-                  password: val.password,
-                  iv: val.iv,
-                  id: val.id,
-                });
-              }}
-              key={key}
-            >
-              <h3>{val.title}</h3>
-            </div>
-          );
-        })}
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        {isLogin ? (
+          <button onClick={handleLogin}>Login</button>
+        ) : (
+          <button onClick={handleSignup}>Signup</button>
+        )}
+        <p>
+          {isLogin ? "Don't have an account?" : "Already have an account?"}
+          <Link to="#" onClick={() => setIsLogin(!isLogin)}>
+            {isLogin ? "Signup" : "Login"}
+          </Link>
+        </p>
       </div>
     </div>
   );
 }
 
-export default App;
+function RouterApp() {
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route exact path="/" component={App} />
+        <Route path="/passwordManager" component={PasswordManager} />
+      </Switch>
+    </BrowserRouter>
+  );
+}
+
+export default RouterApp;
