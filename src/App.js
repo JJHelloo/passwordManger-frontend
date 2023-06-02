@@ -43,18 +43,18 @@ function App() {
   return (
     <div className="App">
       <div className="addPassword">
+      <input
+          type="text"
+          placeholder="Ex. Facebook"
+          onChange={(event) => {
+            setTitle(event.target.value);
+          }}
+        />
         <input
           type="text"
           placeholder="Ex. password123"
           onChange={(event) => {
             setPassword(event.target.value);
-          }}
-        />
-        <input
-          type="text"
-          placeholder="Ex. Facebook"
-          onChange={(event) => {
-            setTitle(event.target.value);
           }}
         />
         <button onClick={addPassword}> Add Password</button>
