@@ -1,0 +1,66 @@
+app.post('/decryptPassword', async (req, res) => {
+  const { password, iv, id } = req.body;
+  const { user_id, masterPassword } = req.session;
+  
+  const getPasswordQuery = `
+    SELECT password, salt, iv
+    FROM passwords
+    WHERE id = ? AND user_id = ?
+  `;
+  const passwordData = await executeSQL(getPasswordQuery, [id, user_id]);
+  
+  if (passwordData.length === 0) {
+    return res.status(401).json({ error: "Password not found" });
+  }
+
+  const { salt, iv: passwordIv } = passwordData[0];
+  
+  try {
+    const decryptedData = await decrypt({ data: password, salt, iv }, masterPassword);
+    res.send(decryptedData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'An error occurred during password decryption.' });
+  }
+});
+
+
+const crypto = require('crypto');
+
+const encrypt = (data, masterPassword) => {
+  const salt = crypto.randomBytes(16);
+  const iv = crypto.randomBytes(12);
+  const key = crypto.pbkdf2Sync(masterPassword, salt, 100000, 32, 'sha512');
+
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+
+  let encryptedData = cipher.update(data, 'utf8', 'hex');
+  encryptedData += cipher.final('hex');
+
+  const tag = cipher.getAuthTag();
+
+  const encryptedObject = {
+    salt: salt.toString('hex'),
+    iv: iv.toString('hex'),
+    data: encryptedData,
+    tag: tag.toString('hex')
+  };
+
+  return encryptedObject;
+};
+
+const decrypt = (encryption, masterPassword) => {
+  const { salt, iv, data, tag } = encryption;
+  const key = crypto.pbkdf2Sync(masterPassword, Buffer.from(salt, 'hex'), 100000, 32, 'sha512');
+
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'hex'));
+  decipher.setAuthTag(Buffer.from(tag, 'hex'));
+
+  let decryptedData = decipher.update(data, 'hex', 'utf8');
+  decryptedData += decipher.final('utf8');
+
+  return decryptedData;
+};
+
+module.exports = { encrypt, decrypt };
+
