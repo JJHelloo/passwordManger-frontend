@@ -1,58 +1,84 @@
-/* .App {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  } */
-  .pass {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
-  .addPassword {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: lightblue;
-    width: 60%;
-    height: 300px;
-    border-radius: 20px;
-    margin-top: 20px;
-  }
-  .addPassword button, input {
-    width: 300px;
-    height: 40px;
-    border: none;
-    border-radius: 7px;
-    margin: 10px;
-    padding-left: 15px;
-    font-size: 17px;
-  }
-  button {
-    cursor: pointer;
-  }
-  
-  .passwords{
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin-top: 20px;
-  }
-  
-  .password {
-    width: 400px;
-    height: 50px;
-    background-color: black;
-    border-radius: 7px;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 10px;
-    font-size: 20px;
-    font-family: Arial, Helvetica, sans-serif;
-    cursor: pointer;
-  }
+.Pass {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: Arial, sans-serif;
+  background-color: #222;
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.body {
+  background-color: #333;
+}
+
+.addPassword {
+  margin-bottom: 20px;
+}
+
+.input-container {
+  margin-bottom: 20px;
+}
+
+.addPassword input {
+  width: 97%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+}
+
+.addPassword button {
+  padding: 10px 20px;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.passwords {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-gap: 10px;
+}
+
+.password {
+  padding: 10px;
+  background-color: #333;
+  border: 1px solid #222;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.password h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #00b894;
+}
+
+.password:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.logout-button {
+  padding: 10px 20px;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-left: 20px;
+}
+
+.user-email {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  color: #00b894;
+}
