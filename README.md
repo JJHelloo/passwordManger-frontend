@@ -1,4 +1,5 @@
 Password Manager Application
+
 This is a secure password manager application that allows you to store and manage your passwords in an encrypted and protected manner. The application employs robust security measures to ensure the confidentiality and integrity of your sensitive data.
 
 Security Features
