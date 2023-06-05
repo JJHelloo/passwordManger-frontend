@@ -11,13 +11,28 @@ function PasswordManager() {
   const [title, setTitle] = useState("");
   const [passwordList, setPasswordList] = useState([]);
   const [userEmail, setUserEmail] = useState(localStorage.getItem('email') || "");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const [isLoading, setIsLoading] = useState(true);
 
+  useEffect(() => {
+  // Check if the user is authenticated
+    Axios.get(`${process.env.REACT_APP_API_URL}/checkAuthentication`, { withCredentials: true })
+      .then((response) => {
+        if (!response.data.authenticated) {
+          // User is not authenticated, navigate to login page
+          navigate("/");
+        }
+      })
+      .catch((error) => {
+        console.log("Error checking authentication:", error);
+    });
+  }, []);
   useEffect(() => {
     // Retrieve user's email from localStorage
     setUserEmail(localStorage.getItem('email'));
     fetchPasswords();
-    // Fetch user's passwords
-    Axios.get("http://localhost:3001/showPasswords", { withCredentials: true })
+    // Fetch user's passwords 
+    Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
       .then((response) => {
         setPasswordList(response.data);
       })
@@ -25,9 +40,13 @@ function PasswordManager() {
         console.log("Error fetching passwords:", error);
       });
   }, []);
+  useEffect(() => {
+    console.log("autho ",isAuthenticated);
+  }, [isAuthenticated]);
+
 
   const addPassword = () => {
-    Axios.post("http://localhost:3001/addPassword", {
+    Axios.post(`${process.env.REACT_APP_API_URL}/addPassword`, {
       password: password,
       title: title,
     }, { withCredentials: true })
@@ -43,7 +62,7 @@ function PasswordManager() {
     });
   };  
   const fetchPasswords = () => {
-    Axios.get("http://localhost:3001/showPasswords", { withCredentials: true })
+    Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
       .then((response) => {
         setPasswordList(response.data);
       })
@@ -54,8 +73,8 @@ function PasswordManager() {
 
   const decryptPassword = (encryption) => {
     const { password, iv, id } = encryption;
-  
-    Axios.post("http://localhost:3001/decryptPassword", { password, iv, id }, { withCredentials: true })
+    
+    Axios.post(`${process.env.REACT_APP_API_URL}/decryptPassword`, { password, iv, id }, { withCredentials: true })
       .then((response) => {
         // Log the decrypted password
         console.log('Decrypted password:', response.data);
@@ -72,9 +91,8 @@ function PasswordManager() {
       });
   };
   
-  
   const handleLogout = () => {
-    Axios.post("http://localhost:3001/logout", {}, { withCredentials: true })
+    Axios.post(`${process.env.REACT_APP_API_URL}/logout`, {}, { withCredentials: true })
       .then(() => {
         localStorage.removeItem('email'); // Remove user's email from localStorage upon logout
         navigate("/"); // Redirect to login page
@@ -83,6 +101,7 @@ function PasswordManager() {
         console.log(err);
       });
   };  
+
 
   return (
     <div className="Pass">
