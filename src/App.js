@@ -1,19 +1,21 @@
 import './App.css';
-import React, { useState } from "react";
+// import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Axios from "axios";
+import bcrypt from 'bcryptjs';
 import PasswordManager from "./components/passwordManager";
 
 function App() {
+  const saltRounds = 12;
   const [email, setEmail] = useState("");
   const [masterPassword, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLogin, setIsLogin] = useState(true);
   const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  // const [signinMessage, setSigninMessage] = useState("");
+  // const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [signinMessage, setSigninMessage] = useState("");
 
   const navigate = useNavigate();
 
@@ -26,7 +28,7 @@ function App() {
     //   console.log("Invalid email format");
     //   setErrorMessage("Invalid email format");
     //   return;
-    // } REACT_APP_API_URL=http://localhost:3001
+    // } 
 
     Axios.post(`${process.env.REACT_APP_API_URL}/login`, {
       email: email,
@@ -35,10 +37,10 @@ function App() {
       .then((response) => {
         if (response.data.authenticated) {
           localStorage.setItem('email', email);
-          navigate("/passwordManager");
+          navigate("/passwordManager",  { state: { masterPassword } });
         } else {
           console.log("Login failed");
-          setErrorMessage("Login failed");
+          setErrorMessage(response.data.error);
         }
       })
       .catch((error) => {
@@ -49,19 +51,22 @@ function App() {
   };
 
   const handleSignup = () => {
-    // if (!email.includes('@')) {
-    //   console.log("Invalid email format");
-    //   return;
-    // }   
-    // if (masterPassword.length < 10) {
-    //   console.log("Password must be at least 10 characters");
-    //   return;
-    // }
-    // if(isValid(masterPassword)) {
+    if (!email.includes('@')) {
+      setSigninMessage("Invalid email format");
+      console.log("Invalid email format");
+      return;
+    }   
+    if (masterPassword.length < 10) {
+      setSigninMessage("Password must be at least 10 characters");
+      console.log("Password must be at least 10 characters");
+      return;
+    }
+    if(isValid(masterPassword)) {
     if (masterPassword === confirmPassword) {
+      const hashedPassword = bcrypt.hashSync(masterPassword, saltRounds);
       Axios.post(`${process.env.REACT_APP_API_URL}/signup`, {
         email: email,
-        masterPassword: masterPassword,
+        masterPassword: hashedPassword,
       }, { withCredentials: true })
         .then((response) => {
           if (response.data.message === "Registration successful") {
@@ -74,16 +79,23 @@ function App() {
         })
         .catch((error) => {
           console.error("Email already in use", error);
-          setErrorMessage("Email already in use");
+          setSigninMessage("Email already in use");
           console.log("Email already exit");
         });
-    } else {
+    }  else {
+      setSigninMessage("Passwords don't match");
       setPasswordsMatch(false);
+    } } else {
+      setSigninMessage("Password must contain a number and speical charecter");
+
     }
-  // } else {
-  //   console.log("password is invalid");
-  // }
   };
+  useEffect(() => {
+    setErrorMessage(""); // Clear the error message
+  }, [isLogin]);
+  useEffect(() => {
+    setErrorMessage(""); // Clear the error message
+  }, [!isLogin]);
 
   return (
     <div className="App">
@@ -110,8 +122,7 @@ function App() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
-            {!passwordsMatch && <p className="error">Passwords do not match</p>}
-            {/* {signinMessage && <p className="error">{signinMessage}</p>} */}
+            {signinMessage && <p className="error">{signinMessage}</p>} 
           </>
         )}
         {isLogin ? (
