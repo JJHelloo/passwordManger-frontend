@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from "react";
 import Axios from "axios";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate,useLocation } from 'react-router-dom';
 import "./pass.css";
 import App from "../App";
-import { Navigate } from "react-router-dom";
+import { encrypt, decrypt } from '../encrytionHandler';
 
 function PasswordManager() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const masterPassword = location?.state?.masterPassword || '';
   const [password, setPassword] = useState("");
   const [title, setTitle] = useState("");
   const [passwordList, setPasswordList] = useState([]);
   const [userEmail, setUserEmail] = useState(localStorage.getItem('email') || "");
+  const [decryptedPass, setDecryptedPass] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  // const [isLoading, setIsLoading] = useState(true);
 
+  // const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
   // Check if the user is authenticated
     Axios.get(`${process.env.REACT_APP_API_URL}/checkAuthentication`, { withCredentials: true })
@@ -31,24 +34,20 @@ function PasswordManager() {
     // Retrieve user's email from localStorage
     setUserEmail(localStorage.getItem('email'));
     fetchPasswords();
-    // Fetch user's passwords 
-    Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
-      .then((response) => {
-        setPasswordList(response.data);
-      })
-      .catch((error) => {
-        console.log("Error fetching passwords:", error);
-      });
   }, []);
   useEffect(() => {
-    console.log("autho ",isAuthenticated);
+    // console.log("autho ",isAuthenticated);
   }, [isAuthenticated]);
 
 
   const addPassword = () => {
+    const encryptedPassword = encrypt(password, masterPassword);
+    
     Axios.post(`${process.env.REACT_APP_API_URL}/addPassword`, {
-      password: password,
+      password: encryptedPassword.data,
       title: title,
+      iv: encryptedPassword.iv,
+      salt: encryptedPassword.salt
     }, { withCredentials: true })
     .then((response) => {
       // Clear the input fields
@@ -64,6 +63,7 @@ function PasswordManager() {
   const fetchPasswords = () => {
     Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
       .then((response) => {
+        // console.log(response.data);
         setPasswordList(response.data);
       })
       .catch((error) => {
@@ -72,24 +72,33 @@ function PasswordManager() {
   }
 
   const decryptPassword = (encryption) => {
-    const { password, iv, id } = encryption;
-    
-    Axios.post(`${process.env.REACT_APP_API_URL}/decryptPassword`, { password, iv, id }, { withCredentials: true })
-      .then((response) => {
-        // Log the decrypted password
-        console.log('Decrypted password:', response.data);
+    const { password, iv, salt, id } = encryption;
+
+    // Find the corresponding password object in the passwordList state
+  const passwordObj = passwordList.find(val => val.id === id);
   
-        setPasswordList(prevPasswordList =>
-          prevPasswordList.map(val => val.id === encryption.id 
-            ? { ...val, title: response.data }
-            : val
-          )
-        );
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+  // Check if the password is already decrypted
+  if (passwordObj && passwordObj.decrypted) {
+    console.log('Password is already decrypted:', password);
+    return;
+  }
+    // Decrypt the password locally on the client side
+    const decryptedPassword = decrypt(encryption, masterPassword);
+    setDecryptedPass(decryptedPassword); // Add this line
+
+
+    // Log the decrypted password
+    console.log('Decrypted password:', decryptedPassword);
+  
+    // Update the password list state
+    setPasswordList(prevPasswordList =>
+      prevPasswordList.map(val => val.id === id
+        ? { ...val, password: decryptedPassword, decrypted: true }
+        : val
+      )
+    );
   };
+  
   
   const handleLogout = () => {
     Axios.post(`${process.env.REACT_APP_API_URL}/logout`, {}, { withCredentials: true })
@@ -137,11 +146,14 @@ function PasswordManager() {
                   password: val.password,
                   iv: val.iv,
                   id: val.id,
+                  salt: val.salt,
                 });
               }}
               key={key}
             >
               <h3>{val.title}</h3>
+              {val.decrypted && <p>{val.password}</p>}
+              
             </div>
           );
         })}
