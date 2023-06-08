@@ -24,12 +24,7 @@ function App() {
   }
   
   const handleLogin = () => {
-    // if (!email.includes('@')) {
-    //   console.log("Invalid email format");
-    //   setErrorMessage("Invalid email format");
-    //   return;
-    // } 
-
+ 
     Axios.post(`${process.env.REACT_APP_API_URL}/login`, {
       email: email,
       masterPassword: masterPassword,
@@ -39,13 +34,10 @@ function App() {
           localStorage.setItem('email', email);
           navigate("/passwordManager",  { state: { masterPassword } });
         } else {
-          console.log("Login failed");
           setErrorMessage(response.data.error);
         }
       })
       .catch((error) => {
-        // console.error("Login error:", error);
-        console.log("Login failed..");
         setErrorMessage("Login failed");
       });
   };
@@ -53,12 +45,10 @@ function App() {
   const handleSignup = () => {
     if (!email.includes('@')) {
       setSigninMessage("Invalid email format");
-      console.log("Invalid email format");
       return;
     }   
     if (masterPassword.length < 10) {
       setSigninMessage("Password must be at least 10 characters");
-      console.log("Password must be at least 10 characters");
       return;
     }
     if(isValid(masterPassword)) {
@@ -73,20 +63,17 @@ function App() {
             localStorage.setItem('email', email);
             navigate("/passwordManager");
           } else {
-            console.log("Failure");
             setPasswordsMatch(false);
           }
         })
         .catch((error) => {
-          console.error("Email already in use", error);
           setSigninMessage("Email already in use");
-          console.log("Email already exit");
         });
     }  else {
       setSigninMessage("Passwords don't match");
       setPasswordsMatch(false);
     } } else {
-      setSigninMessage("Password must contain a number and speical charecter");
+      setSigninMessage("Password must contain a number, a speical charecter, and upper/lowercase letter");
 
     }
   };

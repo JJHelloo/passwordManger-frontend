@@ -35,9 +35,7 @@ function PasswordManager() {
     setUserEmail(localStorage.getItem('email'));
     fetchPasswords();
   }, []);
-  useEffect(() => {
-    // console.log("autho ",isAuthenticated);
-  }, [isAuthenticated]);
+
 
 
   const addPassword = () => {
@@ -63,7 +61,6 @@ function PasswordManager() {
   const fetchPasswords = () => {
     Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
       .then((response) => {
-        // console.log(response.data);
         setPasswordList(response.data);
       })
       .catch((error) => {
@@ -79,16 +76,12 @@ function PasswordManager() {
   
   // Check if the password is already decrypted
   if (passwordObj && passwordObj.decrypted) {
-    console.log('Password is already decrypted:', password);
+    console.log('Password is already decrypted:');
     return;
   }
     // Decrypt the password locally on the client side
     const decryptedPassword = decrypt(encryption, masterPassword);
     setDecryptedPass(decryptedPassword); // Add this line
-
-
-    // Log the decrypted password
-    console.log('Decrypted password:', decryptedPassword);
   
     // Update the password list state
     setPasswordList(prevPasswordList =>
@@ -97,7 +90,8 @@ function PasswordManager() {
         : val
       )
     );
-  };
+    
+  }; //password manager end
   
   
   const handleLogout = () => {
