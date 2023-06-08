@@ -4,20 +4,35 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate,useLocation }
 import "./pass.css";
 import App from "../App";
 import { encrypt, decrypt } from '../encrytionHandler';
+import { encryptMasterPassword, decryptMasterPassword } from '../masterPassEncryption';
+
 
 function PasswordManager() {
   const location = useLocation();
   const navigate = useNavigate();
-  const masterPassword = location?.state?.masterPassword || '';
+  const { encryptedMasterPassword, encryptionKey, salt, iv } = location.state || {};
+  // const masterPassword = location?.state?.masterPassword || '';
   const [password, setPassword] = useState("");
+  const [masterPassword, setMasterPassword] = useState("")
   const [title, setTitle] = useState("");
   const [passwordList, setPasswordList] = useState([]);
   const [userEmail, setUserEmail] = useState(localStorage.getItem('email') || "");
   const [decryptedPass, setDecryptedPass] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-
+  
+useEffect(() => {
+  // If the master password is not found, redirect the user to the login page
+  if (!encryptedMasterPassword) {
+    navigate("/");
+  } else {
+    // Decrypt the master password when encryptedMasterPassword changes
+    const masteredPassword = decryptMasterPassword(encryptedMasterPassword, encryptionKey, salt, iv);
+    setMasterPassword(masteredPassword);
+  }
+}, [encryptedMasterPassword, encryptionKey, salt, iv, navigate]);
   // const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
+    
   // Check if the user is authenticated
     Axios.get(`${process.env.REACT_APP_API_URL}/checkAuthentication`, { withCredentials: true })
       .then((response) => {

@@ -19,6 +19,7 @@ const encrypt = (data, masterPassword) => {
 };
   
 const decrypt = (encryption, masterPassword) => {
+
   const key = forge.pkcs5.pbkdf2(masterPassword, forge.util.decode64(encryption.salt), 200000, 32);
   const iv = forge.util.decode64(encryption.iv);
 
