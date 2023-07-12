@@ -1,5 +1,6 @@
 import './App.css';
 // import React, { useState } from "react";
+import forge from 'node-forge';
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Axios from "axios";
@@ -23,43 +24,25 @@ function App() {
   const isValid = (input) => {
     return /[a-z]/.test(input) && /[A-Z]/.test(input) && /[0-9]/.test(input) && /[^a-zA-Z0-9]/.test(input) && input.length >= 8;
   }
-  
-  const handleLogin = () => {
-    const hashedPassword = bcrypt.hashSync(masterPassword, saltRounds);
-    Axios.post(`${process.env.REACT_APP_API_URL}/login`, {
-      email: email,
-      masterPassword: masterPassword,
-    }, { withCredentials: true })
-      .then((response) => {
-        if (response.data.authenticated) {
-          const { encryptedMasterPassword, salt, iv } = encryptMasterPassword(masterPassword, response.data.encryptionKey);
-          localStorage.setItem('email', email);
-          navigate("/passwordManager",{ state: { encryptedMasterPassword, encryptionKey: response.data.encryptionKey, salt, iv } });
-        } else {
-          setErrorMessage(response.data.error);
-        }
-      })
-      .catch((error) => {
-        console.log("wtf");
-        setErrorMessage("Login failed");
-      });
-  };
-
+  // handle user signup
   const handleSignup = () => {
-    if (!email.includes('@')) {
-      setSigninMessage("Invalid email format");
-      return;
-    }   
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!email || typeof email !== "string" || !emailRegex.test(email)) {
+        setSigninMessage("Invalid email format");
+        return;
+    } 
     if (masterPassword.length < 10) {
       setSigninMessage("Password must be at least 10 characters");
       return;
     }
     if(isValid(masterPassword)) {
     if (masterPassword === confirmPassword) {
-      const hashedPassword = bcrypt.hashSync(masterPassword, saltRounds);
+      const salt = forge.random.getBytesSync(128);
+      const hashedPassword = forge.pkcs5.pbkdf2(masterPassword, salt, 1000, 32);
       Axios.post(`${process.env.REACT_APP_API_URL}/signup`, {
         email: email,
-        masterPassword: hashedPassword,
+      masterPassword: forge.util.encode64(hashedPassword),
+      salt: forge.util.encode64(salt),
       }, { withCredentials: true })
         .then((response) => {
           if (response.data.message === "Registration successful") {
@@ -77,9 +60,35 @@ function App() {
       setPasswordsMatch(false);
     } } else {
       setSigninMessage("Password must contain a number, a speical charecter, and upper/lowercase letter");
-
     }
   };
+
+// handle user log ins 
+  const handleLogin = () => {
+    Axios.post(`${process.env.REACT_APP_API_URL}/login`, {
+      email: email,
+    }, { withCredentials: true })
+      .then((response) => {
+        if (response.data.authenticated) {
+          const salt = forge.util.decode64(response.data.salt);
+          const hashedPassword = forge.pkcs5.pbkdf2(masterPassword, salt, 1000, 32);
+          if (forge.util.encode64(hashedPassword) === response.data.hashedPassword) {
+            const { encryptedMasterPassword, salt, iv } = encryptMasterPassword(masterPassword, response.data.encryptionKey);
+            localStorage.setItem('email', email);
+            navigate("/passwordManager",{ state: { encryptedMasterPassword, encryptionKey: response.data.encryptionKey, salt, iv } });
+          } else { 
+            setErrorMessage("Invalid email or password");
+          }
+        } else {
+          setErrorMessage(response.data.error);
+        }
+      })
+      .catch((error) => {
+        setErrorMessage("Login failed");
+      });
+  };
+  
+  
   useEffect(() => {
     setErrorMessage(""); // Clear the error message
   }, [isLogin]);
