@@ -1,15 +1,15 @@
 import './App.css';
-// import React, { useState } from "react";
+import { Spin } from 'antd';
 import forge from 'node-forge';
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Axios from "axios";
-import bcrypt from 'bcryptjs';
 import PasswordManager from "./components/passwordManager";
 import { encryptMasterPassword } from './masterPassEncryption';
 
 function App() {
   const saltRounds = 12;
+  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [masterPassword, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -65,6 +65,8 @@ function App() {
 
 // handle user log ins 
   const handleLogin = () => {
+    // Set loading to true when the request starts
+    setIsLoading(true);
     Axios.post(`${process.env.REACT_APP_API_URL}/login`, {
       email: email,
     }, { withCredentials: true })
@@ -75,16 +77,20 @@ function App() {
           if (forge.util.encode64(hashedPassword) === response.data.hashedPassword) {
             const { encryptedMasterPassword, salt, iv } = encryptMasterPassword(masterPassword, response.data.encryptionKey);
             localStorage.setItem('email', email);
+            setIsLoading(false); // Set loading to false when the request finishes
             navigate("/passwordManager",{ state: { encryptedMasterPassword, encryptionKey: response.data.encryptionKey, salt, iv } });
           } else { 
             setErrorMessage("Invalid email or password");
+            setIsLoading(false); // Set loading to false when the request finishes
           }
         } else {
           setErrorMessage(response.data.error);
+          setIsLoading(false); // Set loading to false when the request finishes
         }
       })
       .catch((error) => {
         setErrorMessage("Login failed");
+        setIsLoading(false); // Set loading to false when the request finishes
       });
   };
   
@@ -108,7 +114,8 @@ function App() {
           placeholder="Master Password"
           value={masterPassword}
           onChange={(e) => setPassword(e.target.value)}
-        />  {errorMessage && <p className="error">{errorMessage}</p>}  {/* login error message */}
+        />  
+        {errorMessage && <p className="error">{errorMessage}</p>}  {/* login error message */}
           
         {!isLogin && (
           <>
@@ -122,7 +129,13 @@ function App() {
           </>
         )}
         {isLogin ? (
-          <button onClick={handleLogin}>Login</button>
+          <>
+            {isLoading ? (
+              <Spin /> // replace with a loading spinner
+            ) : (
+              <button onClick={handleLogin}>Login</button>
+            )}
+          </>
         ) : (
           <button onClick={handleSignup}>Signup</button>
         )}
@@ -134,7 +147,7 @@ function App() {
         </p>
       </div>
     </div>
-  );
+);
 }
 
 function RouterApp() {
