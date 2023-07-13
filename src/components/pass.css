@@ -82,3 +82,28 @@
   font-weight: bold;
   color: #00b894;
 }
+.password button {
+  margin-top: 10px;
+  margin-right: 10px;
+  padding: 10px;
+  background-color: #00b894;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+.password button:hover {
+  background-color: #00816a;
+}
+.ant-spin {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  height: 30px; /* Adjust to the height of your button */
+  width: 80px; /* Adjust to the width of your button */
+}
+.ant-spin-dot-item {
+  background-color: #50dd8f !important;
+}
