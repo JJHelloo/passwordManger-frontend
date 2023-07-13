@@ -13,6 +13,10 @@ function PasswordManager() {
   const navigate = useNavigate();
   const { encryptedMasterPassword, encryptionKey, salt, iv } = location.state || {};
   // const masterPassword = location?.state?.masterPassword || '';
+  const [newPassword, setNewPassword] = useState("");
+  const [editingId, setEditingId] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [loadingId, setLoadingId] = useState(null);
   const [password, setPassword] = useState("");
   const [masterPassword, setMasterPassword] = useState("")
   const [title, setTitle] = useState("");
@@ -73,7 +77,36 @@ useEffect(() => {
     .catch((error) => {
       console.error(error);
     });
-  };  
+  };  // add password end
+
+  // update website passwords 
+  const updatePassword = () => {
+    setIsSaving(true);
+    const encryptedPassword = encrypt(newPassword, masterPassword);
+
+    Axios.put(`${process.env.REACT_APP_API_URL}/updatePassword`, {
+      id: editingId,
+      password: encryptedPassword.data,
+      title: title,
+      iv: encryptedPassword.iv,
+      salt: encryptedPassword.salt
+    }, { withCredentials: true })
+    .then((response) => {
+      // Clear the input fields
+      setNewPassword("");
+      setTitle("");
+      // Re-fetch the password list
+      fetchPasswords();
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+
+    setEditingId(null);
+    setIsSaving(false);
+  };
+
+  // grab passwords to show 
   const fetchPasswords = () => {
     Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
       .then((response) => {
@@ -82,32 +115,36 @@ useEffect(() => {
       .catch((error) => {
         console.log("Error fetching passwords:", error);
       });
-  }
+  } // fetch password end
 
   const decryptPassword = (encryption) => {
     const { password, iv, salt, id } = encryption;
-
+  
     // Find the corresponding password object in the passwordList state
-  const passwordObj = passwordList.find(val => val.id === id);
-  
-  // Check if the password is already decrypted
-  if (passwordObj && passwordObj.decrypted) {
-    console.log('Password is already decrypted:');
-    return;
-  }
-    // Decrypt the password locally on the client side
-    const decryptedPassword = decrypt(encryption, masterPassword);
-    setDecryptedPass(decryptedPassword); // Add this line
-  
-    // Update the password list state
-    setPasswordList(prevPasswordList =>
-      prevPasswordList.map(val => val.id === id
-        ? { ...val, password: decryptedPassword, decrypted: true }
-        : val
-      )
-    );
+    const passwordObj = passwordList.find(val => val.id === id);
     
-  }; //password manager end
+    // Check if the password is already decrypted
+    if (passwordObj && passwordObj.decrypted) {
+      console.log('Password is already decrypted:');
+      return;
+    }
+    setLoadingId(id); // Set loadingId to the id of the password being decrypted
+    
+    // Create an artificial delay using setTimeout
+    setTimeout(() => {
+      // Decrypt the password locally on the client side
+      const decryptedPassword = decrypt(encryption, masterPassword);
+    
+      // Update the password list state
+      setPasswordList(prevPasswordList =>
+        prevPasswordList.map(val => val.id === id
+          ? { ...val, password: decryptedPassword, decrypted: true }
+          : val
+        )
+      );
+      setLoadingId(null); // Reset loadingId to null after decryption is done
+    }, 1000); // 1 second delay
+  };
   
   
   const handleLogout = () => {
@@ -116,10 +153,10 @@ useEffect(() => {
         localStorage.removeItem('email'); // Remove user's email from localStorage upon logout
         navigate("/"); // Redirect to login page
       })
-      .catch(err => {
+      .catch(err => { 
         console.log(err);
       });
-  };  
+  };  // logout end
 
 
   return (
@@ -139,38 +176,66 @@ useEffect(() => {
             setPassword(event.target.value);
           }}
         />
-        <button onClick={addPassword}>Add Password</button>
+        {isSaving ? <Spin /> : <button onClick={addPassword}>Add Password</button>}
         <button className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
       <div className="top-bar">
         <span className="user-email" name="email ">User Email: {userEmail}</span>
       </div>
+
       <div className="passwords">
         {passwordList.map((val, key) => {
           return (
-            <div
-              className="password"
-              onClick={() => {
-                decryptPassword({
-                  password: val.password,
-                  iv: val.iv,
-                  id: val.id,
-                  salt: val.salt,
-                });
-              }}
-              key={key}
-            >
+            <div className="password" key={key}>
               <h3>{val.title}</h3>
               {val.decrypted && <p>{val.password}</p>}
-              
+              {loadingId === val.id ? (
+                <Spin />
+              ) : (
+                <>
+                  {!val.decrypted && (
+                    <button 
+                      className="decrypt-button" 
+                      onClick={() => {
+                        decryptPassword({
+                          password: val.password,
+                          iv: val.iv,
+                          id: val.id,
+                          salt: val.salt,
+                        });
+                      }}
+                    >
+                      Decrypt
+                    </button>
+                  )}
+
+                  {editingId === val.id ? (
+                    isSaving ? (
+                      <Spin />
+                    ) : (
+                      <>
+                        <input type="text" placeholder="New password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
+                        <button onClick={updatePassword}>Save</button>
+                      </>
+                    )
+                  ) : (
+                    <button 
+                      className="update-button" 
+                      onClick={() => setEditingId(val.id)}
+                    >
+                      Edit
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           );
         })}
       </div>
     </div>
   );
-}
+} // passwordManager componet end
 
 function RouterApp() {
   return (

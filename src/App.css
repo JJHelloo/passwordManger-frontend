@@ -68,3 +68,6 @@ body {
 .card .error {
   color: red;
 }
+.ant-spin-dot-item {
+  background-color: #50dd8f !important;
+}
