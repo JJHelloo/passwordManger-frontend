@@ -7,12 +7,30 @@ import { Spin } from 'antd';
 import { encrypt, decrypt } from '../encrytionHandler';
 import { encryptMasterPassword, decryptMasterPassword } from '../masterPassEncryption';
 
+// password generator
+function generateRandomPassword(length) {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const specialChars = "!@#$%^&*()";
+  let password = "";
+
+  for (let i = 0; i < length; i++) {
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  
+  // Generate a random special character
+  const specialChar = specialChars.charAt(Math.floor(Math.random() * specialChars.length));
+  // Insert the special character at a random position in the password
+  const position = Math.floor(Math.random() * password.length);
+  password = password.slice(0, position) + specialChar + password.slice(position);
+
+  return password;
+}
 
 function PasswordManager() {
   const location = useLocation();
   const navigate = useNavigate();
   const { encryptedMasterPassword, encryptionKey, salt, iv } = location.state || {};
-  // const masterPassword = location?.state?.masterPassword || '';
+  const [currentTitle, setCurrentTitle] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [editingId, setEditingId] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -80,32 +98,34 @@ useEffect(() => {
   };  // add password end
 
   // update website passwords 
-  const updatePassword = () => {
+  const handleUpdatePassword = () => {
     setIsSaving(true);
     const encryptedPassword = encrypt(newPassword, masterPassword);
-
+  
     Axios.put(`${process.env.REACT_APP_API_URL}/updatePassword`, {
       id: editingId,
       password: encryptedPassword.data,
-      title: title,
+      title: currentTitle,
       iv: encryptedPassword.iv,
       salt: encryptedPassword.salt
     }, { withCredentials: true })
     .then((response) => {
       // Clear the input fields
       setNewPassword("");
-      setTitle("");
+      setCurrentTitle("");
       // Re-fetch the password list
       fetchPasswords();
     })
     .catch((error) => {
       console.error(error);
     });
-
-    setEditingId(null);
-    setIsSaving(false);
+  
+    setTimeout(() => {
+      setEditingId(null);
+      setIsSaving(false);
+    }, 1000); // 1 second delay
   };
-
+  
   // grab passwords to show 
   const fetchPasswords = () => {
     Axios.get(`${process.env.REACT_APP_API_URL}/showPasswords`, { withCredentials: true })
@@ -146,7 +166,6 @@ useEffect(() => {
     }, 1000); // 1 second delay
   };
   
-  
   const handleLogout = () => {
     Axios.post(`${process.env.REACT_APP_API_URL}/logout`, {}, { withCredentials: true })
       .then(() => {
@@ -158,6 +177,11 @@ useEffect(() => {
       });
   };  // logout end
 
+  // create the genrated password
+  const generateAndSetPassword = () => {
+    const newPassword = generateRandomPassword(12); // generate a 12-character password
+    setPassword(newPassword);
+  };
 
   return (
     <div className="Pass">
@@ -169,19 +193,24 @@ useEffect(() => {
             setTitle(event.target.value);
           }}
         />
-        <input
-          type="text"
-          placeholder="Ex. password123" value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-          }}
-        />
+        <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
+          <input
+            type="text"
+            placeholder="Ex. password123" value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+            }}
+            style={{ width: '97%' }}
+          />
+          <button onClick={generateAndSetPassword} style={{ position: 'absolute', right: 0, width: '17%' }}>Generate Password</button>
+        </div>
+
         {isSaving ? <Spin /> : <button onClick={addPassword}>Add Password</button>}
         <button className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
 
       <div className="top-bar">
-        <span className="user-email" name="email ">User Email: {userEmail}</span>
+        <span className="user-email" name="email "> Email: {userEmail}</span>
       </div>
 
       <div className="passwords">
@@ -215,17 +244,34 @@ useEffect(() => {
                       <Spin />
                     ) : (
                       <>
-                        <input type="text" placeholder="New password" value={newPassword} onChange={(event) => setNewPassword(event.target.value)} />
-                        <button onClick={updatePassword}>Save</button>
+                      <div className="input-container">
+                        <input 
+                          type="text" 
+                          placeholder="Website title" 
+                          value={currentTitle} 
+                          onChange={(event) => setCurrentTitle(event.target.value)} 
+                        />
+                        <input 
+                          type="text" 
+                          placeholder="New password" 
+                          value={newPassword} 
+                          onChange={(event) => setNewPassword(event.target.value)} 
+                        />
+
+                        {isSaving ? (
+                          <Spin />
+                        ) : (
+                          <button onClick={handleUpdatePassword}>Save</button>
+                        )}
+                      </div>
                       </>
                     )
                   ) : (
-                    <button 
-                      className="update-button" 
-                      onClick={() => setEditingId(val.id)}
-                    >
-                      Edit
-                    </button>
+                    <button className="update-button" onClick={() => {
+                      setEditingId(val.id);
+                      setCurrentTitle(val.title);
+                      setNewPassword("");  // Clear the new password field
+                    }}>Edit</button>
                   )}
                 </>
               )}
