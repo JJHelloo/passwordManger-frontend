@@ -1,26 +1,27 @@
-Password Manager Application
+Password Manager Application (Zero-Knowledge Encryption)
 
-This is a secure password manager application that allows you to store and manage your passwords in an encrypted and protected manner. The application employs robust security measures to ensure the confidentiality and integrity of your sensitive data.
+This is a secure password manager application that allows you to store and manage your passwords in an encrypted and protected manner. The application employs robust security measures, including zero-knowledge encryption, to ensure the confidentiality and integrity of your sensitive data.
 
 Security Features
 Zero-Knowledge Encryption
 The application utilizes zero-knowledge encryption, which means that your master password and sensitive data are known only to you. Here's how the zero-knowledge encryption works:
 
 Your master password is transformed into an encryption key using industry-standard algorithms, including encryption, hashing with salting, and secure hashes.
-The encryption key is used to encrypt and decrypt your vault where your passwords are stored.
-The encryption and decryption processes for all your passowrds occur locally on your device, ensuring that your unencrypted data remains separated from the server, and do not travel unencrypted.
+The encryption key is used to encrypt and decrypt your password vault where your passwords are stored.
+The encryption and decryption processes for all your passwords occur locally on your device, ensuring that your unencrypted data remains separated from the server and does not travel unencrypted.
 Encryption Algorithm
-The application employs PBKDF2 along with 256-bit AES encryption/decryption algorithm, which is an industry-standard symmetric encryption algorithm known for its robustness and security.
+The application employs PBKDF2 (Password-Based Key Derivation Function 2) along with a secure encryption/decryption algorithm (forge.pkcs5.pbkdf2), which is an industry-standard symmetric encryption algorithm known for its robustness and security.
 
 Password Hashing
-To protect your master password, the application utilizes the bcrypt password-hashing function, which incorporates salt and multiple rounds of hashing. This one-way hashing function ensures that the original master password cannot be easily retrieved from the stored hash. Bcrypt is widely recognized for its strong security characteristics and is commonly used to securely store passwords in various applications.
-By using bcrypt, your master password is transformed into a irreversible hash, making it extremely difficult for unauthorized individuals to reverse-engineer or obtain the original password from the stored hash. This adds an additional layer of security to protect your master password and prevent unauthorized access to your sensitive data.
-Please note that the use of a one-way hashing function like bcrypt is considered a best practice for password security in applications.
+To protect your master password, the application utilizes PBKDF2 with salt and multiple iterations (pbkdf2). This process applies a cryptographic hash function iteratively to derive a secure encryption key from your master password. The use of salt and multiple iterations adds an additional layer of security, making it computationally expensive for attackers to guess or crack your master password.
+
+By using PBKDF2, your master password is transformed into a derived encryption key, which is then used for encryption and decryption operations on your password vault.
+
+Please note that the use of a strong key derivation function like PBKDF2 with appropriate iterations and salting is considered a best practice for password security in applications.
 
 Development
 This application is currently in development. Future features will include:
 
-Add, edit, and delete passwords as needed.
 A browser extension for easy access to password management features.
 Improved auto-fill capabilities.
 Additional security enhancements.
