@@ -38,7 +38,7 @@ function App() {
     if(isValid(masterPassword)) {
     if (masterPassword === confirmPassword) {
       const salt = forge.random.getBytesSync(128);
-      const hashedPassword = forge.pkcs5.pbkdf2(masterPassword, salt, 150000, 32);
+      const hashedPassword = forge.pkcs5.pbkdf2(masterPassword, salt, 600000, 32);
       Axios.post(`${process.env.REACT_APP_API_URL}/signup`, {
         email: email,
       masterPassword: forge.util.encode64(hashedPassword),
@@ -53,7 +53,7 @@ function App() {
           }
         })
         .catch((error) => {
-          setSigninMessage("Email already in use");
+          setSigninMessage("Something doesn't look right. Try Again");
         });
     }  else {
       setSigninMessage("Passwords don't match");
@@ -73,7 +73,7 @@ function App() {
       .then((response) => {
         if (response.data.authenticated) {
           const salt = forge.util.decode64(response.data.salt);
-          const hashedPassword = forge.pkcs5.pbkdf2(masterPassword, salt, 150000, 32);
+          const hashedPassword = forge.pkcs5.pbkdf2(masterPassword, salt, 600000, 32);
           if (forge.util.encode64(hashedPassword) === response.data.hashedPassword) {
             const { encryptedMasterPassword, salt, iv } = encryptMasterPassword(masterPassword, response.data.encryptionKey);
             localStorage.setItem('email', email);

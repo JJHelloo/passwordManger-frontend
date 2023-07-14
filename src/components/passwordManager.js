@@ -4,8 +4,12 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate,useLocation }
 import "./pass.css";
 import App from "../App";
 import { Spin } from 'antd';
-import { encrypt, decrypt } from '../encrytionHandler';
+import { encrypt, decrypt } from '../encryptionHandler';
 import { encryptMasterPassword, decryptMasterPassword } from '../masterPassEncryption';
+import passwordIcon from '../img/genPassword.png';
+import decryptIcon from '../img/decrypt.png';
+import editIcon from '../img/edit.png';
+
 
 // password generator
 function generateRandomPassword(length) {
@@ -38,10 +42,11 @@ function PasswordManager() {
   const [password, setPassword] = useState("");
   const [masterPassword, setMasterPassword] = useState("")
   const [title, setTitle] = useState("");
+  const [userName, setUserName] = useState("");
   const [passwordList, setPasswordList] = useState([]);
   const [userEmail, setUserEmail] = useState(localStorage.getItem('email') || "");
-  const [decryptedPass, setDecryptedPass] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const [decryptedPass, setDecryptedPass] = useState(null);
+  // const [isAuthenticated, setIsAuthenticated] = useState(false);
   
 useEffect(() => {
   // If the master password is not found, redirect the user to the login page
@@ -185,25 +190,54 @@ useEffect(() => {
 
   return (
     <div className="Pass">
-      <div className="addPassword">
+    <div className="addPassword">
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
         <input
           type="text"
-          placeholder="Ex. Facebook" value={title}
+          placeholder="URL: " 
+          value={title}
           onChange={(event) => {
             setTitle(event.target.value);
           }}
+          style={{ width: '40%' }}
         />
-        <div style={{ position: 'relative', display: 'inline-block', width: '100%' }}>
-          <input
-            type="text"
-            placeholder="Ex. password123" value={password}
-            onChange={(event) => {
-              setPassword(event.target.value);
-            }}
-            style={{ width: '97%' }}
-          />
-          <button onClick={generateAndSetPassword} style={{ position: 'absolute', right: 0, width: '17%' }}>Generate Password</button>
-        </div>
+        <input
+          type="text"
+          placeholder="Username: " 
+          value={userName} // Please ensure that this should be `username` instead of `title` 
+          onChange={(event) => {
+            setUserName(event.target.value); // Please ensure that this should be `setUsername` instead of `setTitle`
+          }}
+          style={{ width: '40%' }}
+        />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', width: '100%', marginTop: '10px' }}>
+  <input
+    type="text"
+    placeholder="Password" 
+    value={password}
+    onChange={(event) => {
+      setPassword(event.target.value);
+    }}
+    style={{ width: '75%' }}
+  />
+  <button 
+    onClick={generateAndSetPassword}   
+    style={{ 
+      width: '30px', 
+      height: '15px',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      marginLeft: '0px',  // Add some margin to separate the button from the input field
+      marginBottom: '25px',
+      backgroundColor: 'transparent',  // Make the button's background transparent
+      border: 'none'  // Remove the button's border
+    }}
+  >
+    <img src={passwordIcon} alt="Generate Password" style={{ width: '20px', height: '20px' }} />
+  </button>
+</div>
 
         {isSaving ? <Spin /> : <button onClick={addPassword}>Add Password</button>}
         <button className="logout-button" onClick={handleLogout}>Logout</button>
@@ -224,7 +258,7 @@ useEffect(() => {
               ) : (
                 <>
                   {!val.decrypted && (
-                    <button 
+                      <button 
                       className="decrypt-button" 
                       onClick={() => {
                         decryptPassword({
@@ -234,8 +268,9 @@ useEffect(() => {
                           salt: val.salt,
                         });
                       }}
+                      style={{ backgroundColor: "transparent", border: "none" }}
                     >
-                      Decrypt
+                      <img src={decryptIcon} alt="Decrypt" style={{ width: '20px', height: '20px' }} />
                     </button>
                   )}
 
@@ -271,7 +306,11 @@ useEffect(() => {
                       setEditingId(val.id);
                       setCurrentTitle(val.title);
                       setNewPassword("");  // Clear the new password field
-                    }}>Edit</button>
+                    }}
+                    style={{ backgroundColor: "transparent", border: "none" }}
+                    >
+                      <img src={editIcon} alt="Edit" style={{ width: '20px', height: '20px' }} />
+                    </button>
                   )}
                 </>
               )}
