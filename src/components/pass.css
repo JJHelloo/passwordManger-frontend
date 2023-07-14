@@ -117,4 +117,7 @@
   flex-direction: column;
   gap: 10px;
 }
+::placeholder {
+  color: white;
+}
 
