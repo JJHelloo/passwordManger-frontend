@@ -238,7 +238,7 @@ useEffect(() => {
     <img src={passwordIcon} alt="Generate Password" style={{ width: '20px', height: '20px' }} />
   </button>
 </div>
-
+          {/* create a spinning obeject to replace the button once pushed */}
         {isSaving ? <Spin /> : <button onClick={addPassword}>Add Password</button>}
         <button className="logout-button" onClick={handleLogout}>Logout</button>
       </div>
