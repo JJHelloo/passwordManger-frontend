@@ -2,7 +2,7 @@ import './App.css';
 import { Spin } from 'antd';
 import forge from 'node-forge';
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import Axios from "axios";
 import PasswordManager from "./components/passwordManager";
 import { encryptMasterPassword } from './masterPassEncryption';
@@ -93,7 +93,6 @@ function App() {
         setIsLoading(false); // Set loading to false when the request finishes
       });
   };
-  
   
   useEffect(() => {
     setErrorMessage(""); // Clear the error message
